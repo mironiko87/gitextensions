@@ -29,6 +29,7 @@ namespace BackgroundFetch
         private readonly NumberSetting<int> _fetchInterval = new NumberSetting<int>("Fetch every (seconds) - set to 0 to disable", 0);
         private readonly BoolSetting _autoRefresh = new BoolSetting("Refresh view after fetch", false);
         private readonly BoolSetting _fetchAllSubmodules = new BoolSetting("Fetch all submodules", false);
+        private readonly NumberSetting<int> _gitLfsLocksInterval = new NumberSetting<int>("Git LFS locks fetch (always refreshes view) - set to 0 to disable", 0);
 
         public override IEnumerable<ISetting> GetSettings()
         {
@@ -37,6 +38,7 @@ namespace BackgroundFetch
             yield return _fetchInterval;
             yield return _autoRefresh;
             yield return _fetchAllSubmodules;
+            yield return _gitLfsLocksInterval;
         }
 
         public override void Register(IGitUICommands gitUiCommands)
@@ -47,11 +49,13 @@ namespace BackgroundFetch
             _currentGitUiCommands.PostSettings += OnPostSettings;
 
             RecreateObservable();
+            RecreateObservableGitLfsLocks();
         }
 
         private void OnPostSettings(object sender, GitUIPostActionEventArgs e)
         {
             RecreateObservable();
+            RecreateObservableGitLfsLocks();
         }
 
         private void RecreateObservable()
@@ -87,7 +91,7 @@ namespace BackgroundFetch
                                       GitArgumentBuilder args;
                                       if (_fetchAllSubmodules.ValueOrDefault(Settings))
                                       {
-                                        args = new GitArgumentBuilder("submodule")
+                                          args = new GitArgumentBuilder("submodule")
                                         {
                                             "foreach",
                                             "--recursive",
@@ -96,7 +100,7 @@ namespace BackgroundFetch
                                             "--all"
                                         };
 
-                                        _currentGitUiCommands.GitModule.GitExecutable.GetOutput(args);
+                                          _currentGitUiCommands.GitModule.GitExecutable.GetOutput(args);
                                       }
 
                                       var gitCmd = _gitCommand.ValueOrDefault(Settings).Trim().SplitBySpace();
@@ -117,6 +121,43 @@ namespace BackgroundFetch
                                           }
                                       }
                                   });
+            }
+        }
+
+        private void RecreateObservableGitLfsLocks()
+        {
+            CancelBackgroundOperation();
+
+            int gitLfsLocksInterval = _gitLfsLocksInterval.ValueOrDefault(Settings);
+
+            var gitModule = _currentGitUiCommands.GitModule;
+
+            var freshLocks = gitModule.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
+            if (gitLfsLocksInterval > 0 && gitModule.IsValidGitWorkingDir() && gitModule.GitLfsLocks != freshLocks)
+            {
+                _cancellationToken =
+                    Observable.Timer(TimeSpan.FromSeconds(Math.Max(5, gitLfsLocksInterval)))
+                              .SelectMany(i =>
+                              {
+                                  // if git not running - start fetch immediately
+                                  if (!gitModule.IsRunningGitProcess())
+                                  {
+                                      return Observable.Return(i);
+                                  }
+
+                                  // in other case - every 5 seconds check if git still running
+                                  return Observable
+                                      .Interval(TimeSpan.FromSeconds(5))
+                                      .SkipWhile(ii => gitModule.IsRunningGitProcess())
+                                      .FirstAsync()
+                                  ;
+                              })
+                              .Repeat()
+                              .ObserveOn(ThreadPoolScheduler.Instance)
+                              .Subscribe(i =>
+                              {
+                                        _currentGitUiCommands.RepoChangedNotifier.Notify();
+                              });
             }
         }
 

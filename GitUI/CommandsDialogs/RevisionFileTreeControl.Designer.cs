@@ -54,6 +54,9 @@
             this.toolStripSeparatorGitActions = new System.Windows.Forms.ToolStripSeparator();
             this.stopTrackingThisFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.assumeUnchangedTheFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lockFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.unlockFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.forceUnlockFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorGitTrackingActions = new System.Windows.Forms.ToolStripSeparator();
             this.findToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.expandSubtreeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -130,6 +133,9 @@
             this.toolStripSeparatorGitActions,
             this.stopTrackingThisFileToolStripMenuItem,
             this.assumeUnchangedTheFileToolStripMenuItem,
+            this.lockFileToolStripMenuItem,
+            this.unlockFileToolStripMenuItem,
+            this.forceUnlockFileToolStripMenuItem,
             this.toolStripSeparatorGitTrackingActions,
             this.findToolStripMenuItem,
             this.expandSubtreeToolStripMenuItem,
@@ -301,6 +307,30 @@
             this.assumeUnchangedTheFileToolStripMenuItem.Size = new System.Drawing.Size(325, 22);
             this.assumeUnchangedTheFileToolStripMenuItem.Text = "Assume unchanged this file";
             this.assumeUnchangedTheFileToolStripMenuItem.Click += new System.EventHandler(this.assumeUnchangedToolStripMenuItem_Click);
+            //
+            // lockFileToolStripMenuItem
+            //
+            this.lockFileToolStripMenuItem.Image = global::GitUI.Properties.Images.Lock;
+            this.lockFileToolStripMenuItem.Name = "lockFileToolStripMenuItem";
+            this.lockFileToolStripMenuItem.Size = new System.Drawing.Size(325, 22);
+            this.lockFileToolStripMenuItem.Text = "Lock file";
+            this.lockFileToolStripMenuItem.Click += new System.EventHandler(this.lockFileToolStripMenuItem_Click);
+            //
+            // unlockFileToolStripMenuItem
+            //
+            this.unlockFileToolStripMenuItem.Image = global::GitUI.Properties.Images.Lock;
+            this.unlockFileToolStripMenuItem.Name = "unlockFileToolStripMenuItem";
+            this.unlockFileToolStripMenuItem.Size = new System.Drawing.Size(325, 22);
+            this.unlockFileToolStripMenuItem.Text = "Unlock file";
+            this.unlockFileToolStripMenuItem.Click += new System.EventHandler(this.unlockFileToolStripMenuItem_Click);
+            //
+            // forceUnlockFileToolStripMenuItem
+            //
+            this.forceUnlockFileToolStripMenuItem.Image = global::GitUI.Properties.Images.Lock;
+            this.forceUnlockFileToolStripMenuItem.Name = "forceUnlockFileToolStripMenuItem";
+            this.forceUnlockFileToolStripMenuItem.Size = new System.Drawing.Size(325, 22);
+            this.forceUnlockFileToolStripMenuItem.Text = "Force unlock file";
+            this.forceUnlockFileToolStripMenuItem.Click += new System.EventHandler(this.forceUnlockFileToolStripMenuItem_Click);
             // 
             // toolStripSeparatorGitTrackingActions
             // 
@@ -398,5 +428,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorGitActions;
         private System.Windows.Forms.ToolStripMenuItem stopTrackingThisFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem expandSubtreeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lockFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem unlockFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem forceUnlockFileToolStripMenuItem;
     }
 }

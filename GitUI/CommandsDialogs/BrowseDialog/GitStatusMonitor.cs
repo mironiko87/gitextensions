@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
-using System.Windows.Forms;
 using GitCommands;
 using GitCommands.Utils;
 using GitUIPluginInterfaces;

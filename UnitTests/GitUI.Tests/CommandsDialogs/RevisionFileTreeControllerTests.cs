@@ -46,7 +46,7 @@ namespace GitUITests.CommandsDialogs
             var item = new GitItem(0, GitObjectType.Tree, ObjectId.Random(), "folder");
             _revisionInfoProvider.LoadChildren(item).Returns(x => null);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(0);
             _imageList.Images.Count.Should().Be(0);
@@ -59,7 +59,7 @@ namespace GitUITests.CommandsDialogs
             var item = new MockGitItem("folder");
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -81,7 +81,7 @@ namespace GitUITests.CommandsDialogs
 
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -102,7 +102,7 @@ namespace GitUITests.CommandsDialogs
             var item = new GitItem(0, GitObjectType.Tree, ObjectId.Random(), "folder");
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -123,7 +123,7 @@ namespace GitUITests.CommandsDialogs
             var item = new GitItem(0, GitObjectType.Tree, ObjectId.Random(), "folder");
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -140,7 +140,7 @@ namespace GitUITests.CommandsDialogs
             var item = new GitItem(0, GitObjectType.Tree, ObjectId.Random(), "folder");
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -162,7 +162,7 @@ namespace GitUITests.CommandsDialogs
             var item = new GitItem(0, GitObjectType.Tree, ObjectId.Random(), "folder");
             _revisionInfoProvider.LoadChildren(item).Returns(items);
 
-            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+            _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
             _rootNode.Nodes.Count.Should().Be(items.Length);
             for (int i = 0; i < items.Length - 1; i++)
@@ -188,7 +188,7 @@ namespace GitUITests.CommandsDialogs
             {
                 _iconProvider.Get(Arg.Any<string>(), Arg.Is<string>(x => x.EndsWith(".txt"))).Returns(icon);
 
-                _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images);
+                _controller.LoadChildren(item, _rootNode.Nodes, _imageList.Images, locks: new string[] { });
 
                 _rootNode.Nodes.Count.Should().Be(items.Length);
                 for (int i = 0; i < items.Length - 1; i++)

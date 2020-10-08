@@ -1,9 +1,9 @@
-﻿using Newtonsoft.Json;
-using System;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace GitLfsApi.Dto
 {
-    class ErrorResponse
+    public class ErrorResponse
     {
         [JsonProperty("message")]
         public string Message { get; set; }

@@ -1,6 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
+    <Compile Remove="GitLfsLocking\**" />
+    <EmbeddedResource Remove="GitLfsLocking\**" />
+    <None Remove="GitLfsLocking\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\CommonAssemblyInfo.cs" Link="Properties\CommonAssemblyInfo.cs" />
   </ItemGroup>
 
@@ -11,6 +17,7 @@
     <PackageReference Include="AdysTech.CredentialManager" Version="$(AdysTechCredentialManagerVersion)" />
     <PackageReference Include="Ben.Demystifier" Version="$(BenDemystifierVersion)" />
     <PackageReference Include="JetBrains.Annotations" Version="$(JetBrainsAnnotationsVersion)" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
   </ItemGroup>

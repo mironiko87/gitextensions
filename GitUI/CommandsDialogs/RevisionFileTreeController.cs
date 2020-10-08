@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Windows.Media.Animation;
 using GitCommands;
 using GitCommands.Git;
 using GitUI.CommandsDialogs.BrowseDialog;
@@ -26,7 +27,7 @@ namespace GitUI.CommandsDialogs
         /// Loads children items for the provided item in to the specified nodes.
         /// For file type items it also loads icons associated with these types at the OS level.
         /// </summary>
-        void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection);
+        void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection, [CanBeNull] string[] locks);
 
         /// <summary>
         /// Select the file or directory node corresponding to the sub path provided.
@@ -50,6 +51,7 @@ namespace GitUI.CommandsDialogs
         private readonly IFileAssociatedIconProvider _iconProvider;
         private readonly Func<string> _getWorkingDir;
         private readonly IGitRevisionInfoProvider _revisionInfoProvider;
+        private readonly IFullPathResolver _fullPathResolver;
         private readonly ConcurrentDictionary<string, IEnumerable<IGitItem>> _cachedItems = new ConcurrentDictionary<string, IEnumerable<IGitItem>>();
 
         public RevisionFileTreeController(Func<string> getWorkingDir, IGitRevisionInfoProvider revisionInfoProvider, IFileAssociatedIconProvider iconProvider)
@@ -57,6 +59,7 @@ namespace GitUI.CommandsDialogs
             _getWorkingDir = getWorkingDir;
             _revisionInfoProvider = revisionInfoProvider;
             _iconProvider = iconProvider;
+            _fullPathResolver = new FullPathResolver(() => _getWorkingDir());
         }
 
         /// <summary>
@@ -82,7 +85,7 @@ namespace GitUI.CommandsDialogs
         /// For file type items it also loads icons associated with these types at the OS level.
         /// </summary>
         /// <remarks>The method DOES NOT check any input parameters for performance reasons.</remarks>
-        public void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection)
+        public void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection, [CanBeNull] string[] locks)
         {
             var childrenItems = _cachedItems.GetOrAdd(item.Guid, _revisionInfoProvider.LoadChildren(item));
             if (childrenItems == null)
@@ -120,6 +123,16 @@ namespace GitUI.CommandsDialogs
 
                     case GitObjectType.Blob:
                         {
+                            var selectedFile = _fullPathResolver.Resolve(gitItem.FileName);
+                            var relativeFilePath = selectedFile.Remove(0, _getWorkingDir().Length - 1);
+
+                            if (locks.Contains(relativeFilePath))
+                            {
+                                imageCollection.Add(relativeFilePath, Properties.Images.Lock);
+                                subNode.ImageKey = subNode.SelectedImageKey = relativeFilePath;
+                                break;
+                            }
+
                             var extension = Path.GetExtension(gitItem.FileName);
                             if (string.IsNullOrWhiteSpace(extension))
                             {

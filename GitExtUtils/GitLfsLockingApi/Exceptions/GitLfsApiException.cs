@@ -1,5 +1,5 @@
-﻿using GitLfsApi.Dto;
-using System;
+﻿using System;
+using GitLfsApi.Dto;
 
 namespace GitLfsApi.Exceptions
 {
@@ -7,15 +7,14 @@ namespace GitLfsApi.Exceptions
     {
         public Uri DocumentationUrl { get; }
         public string RequestId { get; }
-        internal GitLfsApiException(ErrorResponse serverErrorResponse) : base(serverErrorResponse.Message)
+        public GitLfsApiException(ErrorResponse serverErrorResponse) : base(serverErrorResponse.Message)
         {
             DocumentationUrl = serverErrorResponse.DocumentationUrl;
             RequestId = serverErrorResponse.RequestId;
         }
 
-        internal GitLfsApiException(string message) : base(message)
+        public GitLfsApiException(string message) : base(message)
         {
-
         }
     }
 }

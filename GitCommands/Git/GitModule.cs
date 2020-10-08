@@ -16,10 +16,13 @@ using GitCommands.Patches;
 using GitCommands.Settings;
 using GitCommands.Utils;
 using GitExtUtils;
+using GitLfsApi.Data;
+using GitLfsApi.Exceptions;
 using GitUI;
 using GitUIPluginInterfaces;
 using JetBrains.Annotations;
 using Microsoft.VisualStudio.Threading;
+using Newtonsoft.Json;
 
 namespace GitCommands
 {
@@ -51,6 +54,7 @@ namespace GitCommands
             _commitDataManager = new CommitDataManager(() => this);
             _gitExecutable = new Executable(() => AppSettings.GitCommand, WorkingDir);
             _gitCommandRunner = new GitCommandRunner(_gitExecutable, () => SystemEncoding);
+            GitLfsLocks = new string[] { };
 
             // If this is a submodule, populate relevant properties.
             // If this is not a submodule, these will all be null.
@@ -139,6 +143,9 @@ namespace GitCommands
         /// </summary>
         [NotNull]
         public IGitCommandRunner GitCommandRunner => _gitCommandRunner;
+
+        /// <summary>Gets the for the current git repository.</summary>
+        public string[] GitLfsLocks { get; set; }
 
         /// <summary>
         /// Gets the location of .git directory for the current working folder.
@@ -1409,6 +1416,138 @@ namespace GitCommands
                     "--",
                     files.Select(f => f.ToPosixPath().Quote())
                 });
+        }
+
+        private void TrackFileAsLockable(string path)
+        {
+            var args = new GitArgumentBuilder("lfs")
+            {
+                "track",
+                path.TrimStart('\\', '/'),
+                "--lockable"
+            };
+            _gitExecutable.Execute(args);
+        }
+
+        public ExecutionResult CreateLockForFile(string path, out bool wereErrors)
+        {
+            TrackFileAsLockable(path);
+            var args = new GitArgumentBuilder("lfs")
+            {
+                "lock",
+                path,
+                "--json"
+            };
+
+            var output = _gitExecutable.Execute(args);
+
+            wereErrors = !output.ExitedSuccessfully;
+            return output;
+        }
+
+        public List<Lock> GetLocks()
+        {
+            var args = new GitArgumentBuilder("lfs")
+            {
+                "locks",
+                "--json"
+            };
+
+            var output = _gitExecutable.Execute(args);
+            if (output.ExitedSuccessfully)
+            {
+                return JsonConvert.DeserializeObject<List<Lock>>(output.StandardOutput);
+            }
+
+            throw new GitLfsApiException(output.StandardError);
+        }
+
+        public ExecutionResult DeleteLockForFile(string path, out bool wereErrors, bool force = false)
+        {
+            var forceFlag = force ? " --force" : "";
+            var args = new GitArgumentBuilder("lfs")
+            {
+                "unlock",
+                path,
+                forceFlag,
+                "--json"
+            };
+
+            var output = _gitExecutable.Execute(args);
+
+            wereErrors = !output.ExitedSuccessfully;
+            return output;
+        }
+
+        public bool IsRepoRegistered(string repoPath)
+        {
+            var args = new GitArgumentBuilder("config")
+            {
+                "--global",
+                "--get-all",
+                "--path",
+                "gitLfsLocking.repos.repo",
+                repoPath.Replace(@"\", @"\\") /* git adds double backslashes when adding config data */
+            };
+            var output = _gitExecutable.Execute(args);
+            return !string.IsNullOrEmpty(output.StandardOutput);
+        }
+
+        public void RegisterRepository(string repoPath)
+        {
+            if (IsRepoRegistered(repoPath))
+            {
+                return;
+            }
+
+            var args = new GitArgumentBuilder("config")
+            {
+                "--global",
+                "--add",
+                "--path",
+                "gitLfsLocking.repos.repo",
+                repoPath
+            };
+            var output = _gitExecutable.Execute(args);
+            if (!string.IsNullOrEmpty(output.StandardError))
+            {
+                throw new Exception(output.StandardError);
+            }
+        }
+
+        public void UnregisterRepository(string repoPath)
+        {
+            var args = new GitArgumentBuilder("config")
+            {
+                "--global",
+                "--unset-all",
+                "--path",
+                "gitLfsLocking.repos.repo",
+                repoPath.Replace(@"\", @"\\") /* git adds double backslashes when adding config data */
+            };
+            var output = _gitExecutable.Execute(args);
+            if (!string.IsNullOrEmpty(output.StandardError))
+            {
+                throw new Exception(output.StandardError);
+            }
+        }
+
+        public List<string> GetRegisteredRepos()
+        {
+            var args = new GitArgumentBuilder("config")
+            {
+                "--global",
+                "--get-all",
+                "--path",
+                "gitLfsLocking.repos.repo"
+            };
+            var output = _gitExecutable.Execute(args);
+            if (!string.IsNullOrEmpty(output.StandardError))
+            {
+                throw new Exception(output.StandardError);
+            }
+
+            return output.StandardOutput.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
         /// <summary>Tries to start Pageant for the specified remote repo (using the remote's PuTTY key file).</summary>

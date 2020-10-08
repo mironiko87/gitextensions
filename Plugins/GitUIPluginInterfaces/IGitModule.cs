@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using GitLfsApi.Data;
 using JetBrains.Annotations;
 
 namespace GitUIPluginInterfaces
@@ -38,6 +39,12 @@ namespace GitUIPluginInterfaces
 
         void SetSetting(string setting, string value);
         void UnsetSetting(string setting);
+
+        /// <summary>Holds the LFS locks for the current git repository.</summary>
+        string[] GitLfsLocks { get; }
+
+        /// <summary>Gets the LFS locks for the current git repository.</summary>
+        List<Lock> GetLocks();
 
         /// <summary>Gets the directory which contains the git repository.</summary>
         string WorkingDir { get; }

@@ -14,7 +14,6 @@ using GitExtUtils.GitUI;
 using GitUI.CommandsDialogs.BrowseDialog;
 using GitUI.Hotkey;
 using GitUI.Properties;
-using GitUI.UserControls;
 using JetBrains.Annotations;
 using ResourceManager;
 
@@ -145,6 +144,9 @@ See the changes in the commit form.");
             _revision = revision;
             _revisionFileTreeController.ResetCache();
 
+            // needed to make sure that he file with locks is up to date
+            Module.GitLfsLocks = Module.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
+
             try
             {
                 tvGitTree.SuspendLayout();
@@ -167,7 +169,7 @@ See the changes in the commit form.");
                 // restore selected file and scroll position when new selection is done
                 if (_revision != null && !_revision.IsArtificial && tvGitTree.ImageList != null)
                 {
-                    _revisionFileTreeController.LoadChildren(_revision, tvGitTree.Nodes, tvGitTree.ImageList.Images);
+                    _revisionFileTreeController.LoadChildren(_revision, tvGitTree.Nodes, tvGitTree.ImageList.Images, Module.GitLfsLocks);
                     ////GitTree.Sort();
                     TreeNode lastMatchedNode = null;
 
@@ -399,7 +401,7 @@ See the changes in the commit form.");
             if (e.Node.Tag is GitItem gitItem)
             {
                 e.Node.Nodes.Clear();
-                _revisionFileTreeController.LoadChildren(gitItem, e.Node.Nodes, tvGitTree.ImageList.Images);
+                _revisionFileTreeController.LoadChildren(gitItem, e.Node.Nodes, tvGitTree.ImageList.Images, locks: new string[] { });
             }
         }
 
@@ -623,6 +625,9 @@ See the changes in the commit form.");
             stopTrackingThisFileToolStripMenuItem.Enabled = isExistingFileOrDirectory;
             assumeUnchangedTheFileToolStripMenuItem.Visible = isFile;
             assumeUnchangedTheFileToolStripMenuItem.Enabled = isExistingFileOrDirectory;
+            lockFileToolStripMenuItem.Visible = isFile;
+            unlockFileToolStripMenuItem.Visible = isFile;
+            forceUnlockFileToolStripMenuItem.Visible = isFile;
             toolStripSeparatorGitTrackingActions.Visible = isFile;
 
             findToolStripMenuItem.Enabled = tvGitTree.Nodes.Count > 0;
@@ -791,6 +796,78 @@ See the changes in the commit form.");
             {
                 MessageBox.Show(_assumeUnchangedSuccess.Text, _success.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
+        }
+
+        private void lockFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selectedFile = GetSelectedFile();
+            var gitDir = ExtractGitBaseDirectory(selectedFile);
+            var relativeFilePath = selectedFile.Remove(0, gitDir.Length);
+            var output = Module.CreateLockForFile(relativeFilePath, out var wereErrors);
+
+            if (wereErrors)
+            {
+                MessageBox.Show(string.Format(output.StandardError), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("File locked", _success.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            LoadRevision(_revision);
+        }
+
+        private void unlockFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selectedFile = GetSelectedFile();
+            var gitDir = ExtractGitBaseDirectory(selectedFile);
+            var relativeFilePath = selectedFile.Remove(0, gitDir.Length);
+            var output = Module.DeleteLockForFile(relativeFilePath, out var wereErrors, false);
+
+            if (wereErrors)
+            {
+                MessageBox.Show(string.Format(output.StandardError), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("File unlocked", _success.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            LoadRevision(_revision);
+        }
+
+        private void forceUnlockFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var selectedFile = GetSelectedFile();
+            var gitDir = ExtractGitBaseDirectory(selectedFile);
+            var relativeFilePath = selectedFile.Remove(0, gitDir.Length);
+            var output = Module.DeleteLockForFile(relativeFilePath, out var wereErrors, true);
+
+            if (wereErrors)
+            {
+                MessageBox.Show(string.Format(output.StandardError), Strings.Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            else
+            {
+                MessageBox.Show("File unlocked", _success.Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+
+            LoadRevision(_revision);
+        }
+
+        private string ExtractGitBaseDirectory(string dir)
+        {
+            if (Directory.Exists($@"{dir}\.git\"))
+            {
+                return dir;
+            }
+
+            if (dir == Directory.GetDirectoryRoot(dir))
+            {
+                throw new ArgumentException("Directory is not a valid git directory.");
+            }
+
+            return ExtractGitBaseDirectory(Directory.GetParent(dir).FullName);
         }
 
         private void stopTrackingToolStripMenuItem_Click(object sender, EventArgs e)
