@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Windows.Forms;
 using System.Windows.Media.Animation;
 using GitCommands;
@@ -27,7 +28,7 @@ namespace GitUI.CommandsDialogs
         /// Loads children items for the provided item in to the specified nodes.
         /// For file type items it also loads icons associated with these types at the OS level.
         /// </summary>
-        void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection, [CanBeNull] string[] locks);
+        void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection);
 
         /// <summary>
         /// Select the file or directory node corresponding to the sub path provided.
@@ -38,6 +39,9 @@ namespace GitUI.CommandsDialogs
         /// Clears the cache of the current revision's loaded children items.
         /// </summary>
         void ResetCache();
+
+        /// <summary>Gets the locks for the current git repository.</summary>
+        public string[] GitLfsLocks { get; set; }
     }
 
     internal sealed class RevisionFileTreeController : IRevisionFileTreeController
@@ -62,6 +66,9 @@ namespace GitUI.CommandsDialogs
             _fullPathResolver = new FullPathResolver(() => _getWorkingDir());
         }
 
+        /// <summary>Gets the locks for the current git repository.</summary>
+        public string[] GitLfsLocks { get; set; }
+
         /// <summary>
         /// Locates the node by the label.
         /// </summary>
@@ -85,7 +92,7 @@ namespace GitUI.CommandsDialogs
         /// For file type items it also loads icons associated with these types at the OS level.
         /// </summary>
         /// <remarks>The method DOES NOT check any input parameters for performance reasons.</remarks>
-        public void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection, [CanBeNull] string[] locks)
+        public void LoadChildren(IGitItem item, TreeNodeCollection nodes, ImageList.ImageCollection imageCollection)
         {
             var childrenItems = _cachedItems.GetOrAdd(item.Guid, _revisionInfoProvider.LoadChildren(item));
             if (childrenItems == null)
@@ -126,7 +133,7 @@ namespace GitUI.CommandsDialogs
                             var selectedFile = _fullPathResolver.Resolve(gitItem.FileName);
                             var relativeFilePath = selectedFile.Remove(0, _getWorkingDir().Length - 1);
 
-                            if (locks.Contains(relativeFilePath))
+                            if (GitLfsLocks.Contains(relativeFilePath))
                             {
                                 imageCollection.Add(relativeFilePath, Properties.Images.Lock);
                                 subNode.ImageKey = subNode.SelectedImageKey = relativeFilePath;

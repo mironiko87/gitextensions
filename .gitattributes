@@ -9,5 +9,5 @@
 *.sh text eol=lf
 *.py text eol=lf
 *.bin binary
-
 *DoAutoCRLF*.approved.* binary diff=text
+README.md filter=lfs diff=lfs merge=lfs -text lockable

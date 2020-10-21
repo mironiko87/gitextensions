@@ -144,7 +144,7 @@ namespace GitCommands
         [NotNull]
         public IGitCommandRunner GitCommandRunner => _gitCommandRunner;
 
-        /// <summary>Gets the for the current git repository.</summary>
+        /// <summary>Gets the locks for the current git repository.</summary>
         public string[] GitLfsLocks { get; set; }
 
         /// <summary>

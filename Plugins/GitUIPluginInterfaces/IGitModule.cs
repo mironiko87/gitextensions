@@ -41,7 +41,7 @@ namespace GitUIPluginInterfaces
         void UnsetSetting(string setting);
 
         /// <summary>Holds the LFS locks for the current git repository.</summary>
-        string[] GitLfsLocks { get; }
+        string[] GitLfsLocks { get; set; }
 
         /// <summary>Gets the LFS locks for the current git repository.</summary>
         List<Lock> GetLocks();

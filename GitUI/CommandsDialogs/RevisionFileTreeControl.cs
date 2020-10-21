@@ -144,8 +144,8 @@ See the changes in the commit form.");
             _revision = revision;
             _revisionFileTreeController.ResetCache();
 
-            // needed to make sure that he file with locks is up to date
-            Module.GitLfsLocks = Module.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
+            // needed to make sure that the locks "list" is up to date
+            _revisionFileTreeController.GitLfsLocks = Module.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
 
             try
             {
@@ -169,7 +169,7 @@ See the changes in the commit form.");
                 // restore selected file and scroll position when new selection is done
                 if (_revision != null && !_revision.IsArtificial && tvGitTree.ImageList != null)
                 {
-                    _revisionFileTreeController.LoadChildren(_revision, tvGitTree.Nodes, tvGitTree.ImageList.Images, Module.GitLfsLocks);
+                    _revisionFileTreeController.LoadChildren(_revision, tvGitTree.Nodes, tvGitTree.ImageList.Images);
                     ////GitTree.Sort();
                     TreeNode lastMatchedNode = null;
 
@@ -401,7 +401,8 @@ See the changes in the commit form.");
             if (e.Node.Tag is GitItem gitItem)
             {
                 e.Node.Nodes.Clear();
-                _revisionFileTreeController.LoadChildren(gitItem, e.Node.Nodes, tvGitTree.ImageList.Images, locks: new string[] { });
+                _revisionFileTreeController.GitLfsLocks = Module.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
+                _revisionFileTreeController.LoadChildren(gitItem, e.Node.Nodes, tvGitTree.ImageList.Images);
             }
         }
 

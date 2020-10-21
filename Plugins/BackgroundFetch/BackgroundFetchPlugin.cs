@@ -132,7 +132,9 @@ namespace BackgroundFetch
 
             var gitModule = _currentGitUiCommands.GitModule;
 
+            // on the first run, this will actually set the GitLfsLocks property for the current module
             var freshLocks = gitModule.GetLocks().Select(x => "\\" + x.Path.Replace('/', '\\')).ToArray();
+
             if (gitLfsLocksInterval > 0 && gitModule.IsValidGitWorkingDir() && gitModule.GitLfsLocks != freshLocks)
             {
                 _cancellationToken =
@@ -158,6 +160,7 @@ namespace BackgroundFetch
                               {
                                         _currentGitUiCommands.RepoChangedNotifier.Notify();
                               });
+                gitModule.GitLfsLocks = freshLocks;
             }
         }
 
