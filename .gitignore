@@ -76,3 +76,4 @@ tree.txt
 artifacts/
 .tools/vswhere/
 /git_lfs_ext_locks
+/README.md
